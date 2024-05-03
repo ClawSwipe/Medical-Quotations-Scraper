@@ -56,10 +56,10 @@
 
 <body>
     <div class="container">
-        <h1>Upload HTML File</h1>
+        <h1>Upload Files here</h1>
         <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
             <label for="file-input" class="browse-btn">Browse</label>
-            <input type="file" id="file-input" name="html_file" accept=".htm, .html" required
+            <input type="file" id="file-input" name="files" accept=".htm, .html, .txt" multiple required
                 onchange="document.getElementById('upload-form').submit()">
         </form>
     </div>
