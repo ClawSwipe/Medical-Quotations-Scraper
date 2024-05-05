@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, send_file
 from bs4 import BeautifulSoup
 import csv
+import tabula
+import pandas as pd
 import os
 
 app = Flask(__name__)
@@ -83,6 +85,48 @@ def process_txt_file(txt_file, trader_name):
 
     return data
 
+def process_pdf_file(pdf_file, trader_name):
+    data = []
+    tables = tabula.read_pdf(pdf_file, pages='all', multiple_tables=True)
+    df = pd.concat(tables)
+    df.reset_index(drop=True, inplace=True)
+    # Check if 'Items' column exists, if not, check for 'Item(s)' column
+    if 'Items' in df.columns:
+        item_column = 'Items'
+    elif 'Item(s)' in df.columns:
+        item_column = 'Item(s)'
+    else:
+        print("oopsie")  # Return empty list if neither column exists
+
+
+    if 'Disc.' in df.columns:
+        disc_column = 'Disc.'
+    elif 'Disc' in df.columns:
+        disc_column = 'Disc'
+    else:
+        print("oopsie")
+
+
+    if 'Bonus/Net' in df.columns:
+        bonus_col = 'Bonus/Net'
+    elif 'Disc / Bonus' in df.columns:
+        bonus_col = 'Disc / Bonus'
+    else:
+        print("oopsie")
+    
+    for i in range(len(df)):
+        data.append({
+            'Code': '',
+            'Item Name': df[item_column][i],
+            'Pharmaceutical': '',
+            'Offer': df[disc_column][i],
+            'Bonus': '' if pd.isna(df[bonus_col][i]) else df[bonus_col][i],
+            'T.P': '',
+            'Trader': trader_name
+        })   
+
+    return data 
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -104,15 +148,18 @@ def upload_file():
     for file in files:
         filename = file.filename
         trader_name = os.path.splitext(filename)[0]
-        print(filename)
         if filename.lower().endswith('.htm'):
             data.extend(process_html_file(file.read(), trader_name))
         elif filename.lower().endswith('.txt'):
             data.extend(process_txt_file(file.read().decode('utf-8'), trader_name))
+        elif filename.lower().endswith('.pdf'):
+            data.extend(process_pdf_file(file, trader_name))
+
     
     # Sort the data alphabetically by the first word of 'Item Name' and then by 'Offer' in descending order
-    sorted_data = sorted(data, key=lambda x: (x['Item Name'].split()[0].lower() if x['Item Name'] else "No Name", -float(x['Offer'].rstrip('%')) if x['Offer'] else 0))
-
+    sorted_data = sorted(data, key=lambda x: (x['Item Name'].split()[0].lower() if x['Item Name'] else "No Name",
+                                          -float(str(x['Offer']).rstrip('%')) if x['Offer'] else 0))
+    
     # Write the sorted data to the CSV file
     with open(output_filename, 'w', newline='', encoding='utf-8') as csvfile:
         csv_writer = csv.DictWriter(csvfile, fieldnames=['Code', 'Item Name', 'Pharmaceutical', 'Offer', 'Bonus', 'T.P', 'Trader'])
