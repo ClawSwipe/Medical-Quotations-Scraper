@@ -27,4 +27,3 @@ A Flask-based web application that extracts, processes, and organizes medical qu
    ```  
 4. Access the web interface at `http://127.0.0.1:5000/`  
 
-Let me know if you want any modifications! 🚀
