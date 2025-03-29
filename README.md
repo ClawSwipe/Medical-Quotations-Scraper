@@ -1,6 +1,5 @@
 
 
-### **GitHub README Description**  
 # **Medical Quotations Scraper**  
 A Flask-based web application that extracts, processes, and organizes medical quotation data from **HTML, TXT, and PDF files** into structured CSV format. The scraper utilizes **BeautifulSoup and Tabula** for parsing, applies sorting and filtering, and supports **multi-file uploads** for batch processing.  
 
